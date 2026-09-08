@@ -17,7 +17,31 @@ services:
     logging:
       driver: local
 
+  wiki:
+    image: requarks/wiki:2.5.289
+    container_name: axi-wiki-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_TYPE: postgres
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: wiki_db_user
+      DB_PASS: ${DB_PASSWORD:?Set DB_PASSWORD in Portainer}
+      DB_NAME: wiki_db
+      DB_SSL: "false"
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - wiki_data:/wiki/data
+    logging:
+      driver: local
+
 volumes:
   postgres_data:
     external: true
     name: ${POSTGRES_VOLUME_NAME:?Set the existing PostgreSQL volume name}
+
+  wiki_data:
