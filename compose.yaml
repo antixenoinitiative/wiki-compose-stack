@@ -1,3 +1,4 @@
+# AXI Wiki stack managed through Portainer GitOps.
 services:
   db:
     image: postgres:14.24
