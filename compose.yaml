@@ -40,9 +40,33 @@ services:
     logging:
       driver: local
 
+  caddy:
+    image: caddy:2
+    container_name: axi-wiki-caddy
+    restart: unless-stopped
+    depends_on:
+      - wiki
+    command:
+      - caddy
+      - reverse-proxy
+      - --from
+      - wiki.antixenoinitiative.com
+      - --to
+      - http://wiki:3000
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: local
+
 volumes:
   postgres_data:
     external: true
     name: ${POSTGRES_VOLUME_NAME:?Set the existing PostgreSQL volume name}
 
   wiki_data:
+  caddy_data:
+  caddy_config:
