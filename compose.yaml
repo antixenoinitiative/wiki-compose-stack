@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:14.24
+    container_name: axi-wiki-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:?Set DB_ADMIN_PASSWORD in Portainer}
+      POSTGRES_DB: wiki_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d wiki_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: local
+
+volumes:
+  postgres_data:
+    external: true
+    name: ${POSTGRES_VOLUME_NAME:?Set the existing PostgreSQL volume name}
