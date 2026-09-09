@@ -15,8 +15,8 @@ This repository describes the stack deployment of Wiki.js, PostgreSQL and Caddy,
 | db | PostgreSQL 14.24, existing restored database | Docker network only |
 | wiki | Wiki.js 2.5.289 | localhost:3000 and Docker network |
 | caddy | Public HTTPS reverse proxy | TCP 80/443 |
-| branding (managed) | Poll approved icon filenames on main every five minutes | No inbound ports |
-| backup (managed) | Dump PostgreSQL immediately at startup and every 24 hours | No inbound ports |
+| branding (managed) | Poll approved icon filenames on main every five minutes | - |
+| backup (managed) | Dump PostgreSQL immediately at startup and every 24 hours | - |
 
 Keep the existing `POSTGRES_VOLUME_NAME=axi-wiki_postgres_data`. The volume remains external. Never run `docker compose down -v` as an update procedure. Keep the stack name `axi-wiki` to retain its other named volumes.
 
