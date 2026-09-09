@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 concurrency:
@@ -60,7 +60,50 @@ jobs:
           labels: |
             org.opencontainers.image.source=https://github.com/antixenoinitiative/wiki-compose-stack
 
-      - name: Summarize publication
+      - name: Signal the published image to Portainer
         if: steps.current.outputs.publish == 'true'
+        shell: bash
         run: |
-          echo 'Published ghcr.io/antixenoinitiative/wiki-compose-tools:main' >> "$GITHUB_STEP_SUMMARY"
+          set -euo pipefail
+          git fetch origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo "Image published, but main advanced during the build. Leaving the newer revision unchanged; its validation/publication will handle deployment." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          python3 - <<'PYTHON'
+          import os
+          import re
+          from pathlib import Path
+
+          path = Path("compose.managed.yaml")
+          content = path.read_text()
+          marker = 'x-axi-tools-publication: "{}-{}"'.format(
+              os.environ["GITHUB_RUN_ID"], os.environ["GITHUB_RUN_ATTEMPT"]
+          )
+          pattern = r'^x-axi-tools-publication:[^\n]*$'
+          matches = re.findall(pattern, content, flags=re.MULTILINE)
+          if len(matches) > 1:
+              raise SystemExit("Duplicate publication markers; refusing to modify Compose")
+          if matches:
+              content = re.sub(pattern, marker, content, flags=re.MULTILINE)
+          else:
+              content = marker + "\n" + content
+          path.write_text(content)
+          PYTHON
+
+          DB_ADMIN_PASSWORD=validation-only \
+          DB_PASSWORD=validation-only \
+          POSTGRES_VOLUME_NAME=validation-only \
+            docker compose -f compose.managed.yaml config --quiet
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- compose.managed.yaml
+          git commit -m "Refresh tools deployment after publication"
+          if ! git push origin HEAD:refs/heads/main; then
+            echo "::error::Image published, but the deployment signal could not be pushed. Check branch rules, Actions permissions, or a concurrent main update. No force push was attempted."
+            exit 1
+          fi
+
+          echo 'Published ghcr.io/antixenoinitiative/wiki-compose-tools:main and committed the deployment signal. Portainer will process it on the next source poll.' >> "$GITHUB_STEP_SUMMARY"
