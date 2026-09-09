@@ -51,11 +51,11 @@ Store real values privately in Portainer:
 | `DB_PASSWORD` | Password for the existing `wiki_db_user` application role |
 | `POSTGRES_VOLUME_NAME` | Existing volume name: `axi-wiki_postgres_data` |
 
-`.env.example` contains placeholders only. Do not commit passwords, registry tokens, Discord secrets, SSH private keys or database dumps. Changing a Compose password variable does not itself rotate a password in an already-initialised PostgreSQL database.
+`.env.example` contains placeholders only. Do not commit passwords, registry tokens, Discord secrets, SSH private keys or database dumps. Changing a compose pw var alone will not rotate a password in an already-initialised PostgreSQL db.
 
 ## Database backups
 
-The backup container checks the database on startup and every 24 hours. It creates and validates a temporary PostgreSQL dump, compares its rendered SQL with previous states and reuses an existing archive when unchanged. Internal database changes or row ordering can produce a distinct state even without a human page edit.
+The backup container checks the database on startup and every 24 hours. It creates and validates a temporary PostgreSQL dump, compares its rendered SQL with previous states and reuses an existing archive when unchanged. Internal database changes or row ordering can produce a distinct state even without content/page edits.
 
 | Tier | Retention |
 | --- | --- |
