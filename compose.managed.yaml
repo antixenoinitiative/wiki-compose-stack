@@ -1,4 +1,4 @@
-x-axi-tools-publication: "34339286360-1"
+x-axi-tools-publication: "34340591488-1"
 # Prepared replacement for compose.yaml; see docs/rollout.md before switching.
 services:
   db:
