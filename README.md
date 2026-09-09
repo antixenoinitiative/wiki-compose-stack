@@ -4,11 +4,11 @@
 
 Production: https://wiki.antixenoinitiative.com
 
-This repository describes the Hetzner deployment of Wiki.js, PostgreSQL and Caddy, managed through Portainer. Page-content synchronization belongs to [axiwiki](https://github.com/antixenoinitiative/axiwiki). Users, permissions, authentication configuration and history live in PostgreSQL; the Git content repository is not a full wiki backup.
+This repository describes the stack deployment of Wiki.js, PostgreSQL and Caddy, managed through Portainer. Page-content synchronization belongs to [axiwiki](https://github.com/antixenoinitiative/axiwiki). Users, permissions, authentication configuration and history live in PostgreSQL; the Git content repository is not a full wiki backup.
 
 ## Current and prepared deployments
 
-`compose.yaml` is the existing production configuration, deliberately unchanged by this preparation. `compose.managed.yaml` is a complete replacement, not an override. It adds automatic branding and database dumps after the tools image has been published. Follow [rollout.md](docs/rollout.md) before changing Portainer's Compose path.
+`compose.yaml` is the existing production configuration -- `compose.managed.yaml` is a complete replacement. It adds automatic branding and database dumps after the tools image has been published. Generally follow [rollout.md](docs/rollout.md)..
 
 | Service | Purpose | Exposure |
 | --- | --- | --- |
@@ -31,19 +31,16 @@ Keep the existing `POSTGRES_VOLUME_NAME=axi-wiki_postgres_data`. The volume rema
 
 ## Updates and branding
 
-Portainer continues tracking main for the selected Compose file. Its GitOps polling is separate from the branding updater. Replace the existing `axi_logo_new2_*` files on main to update icons; no commit hash edit or Wiki.js restart is needed. The updater validates dimensions and activates all fetched files together. GitHub/browser/CDN caching can delay visibility. Keep icon sets in one commit; a push during a fetch can temporarily mix versions of the same dimensions until the next poll.
+Portainer continues tracking main for the selected Compose file. Its GitOps polling is separate from the branding updater. 
+
+Replace the existing logo files on main to update icons when required, no restart is needed. The updater validates dimensions and activates all fetched files together. Keep icon sets in one commit.
 
 Control scripts are baked into the tools image: script updates require publishing a new tools image and changing `AXI_TOOLS_IMAGE`. They are never executed directly from mutable Git URLs. Routine icon changes do not rebuild images. The shared branding volume is mounted read-only in Wiki.js.
 
-Remove the earlier favicon HTML/JavaScript injection after verifying the native icon URL. Safari pinned-tab SVG replacement is not included. The uploaded artwork is unchanged.
-
 ## Backups and deployment history
 
-Retention: one latest distinct daily state, four completed weekly points, and six completed monthly points (up to 11 archives, shared across tiers when unchanged).
-
-Read [backup and recovery](docs/backups.md) and [deployment reporting](docs/deployment-reporting.md). Actual database dumps and credentials must stay private. No production deployment badge is claimed merely because CI passes. The optional reporter records the Portainer-reported revision only after checking local services.
-
-The provided workflows never contact the VPS or modify live services. Merging changes can still trigger Portainer's existing polling, so production Compose changes require review.
+Retention: one latest distinct daily, four completed weeklies, and six completed monthly points, based on changes made.
+Read [backup and recovery](docs/backups.md) and [deployment reporting](docs/deployment-reporting.md).
 
 ## Local checks
 
