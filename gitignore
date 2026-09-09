@@ -1,0 +1,28 @@
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Credentials and keys
+secrets/
+*.key
+*.pem
+
+# Backups and runtime data
+backups/
+wiki-migration/
+*.dump
+*.tar
+*.tar.gz
+postgres-data/
+portainer-data/
+wiki-data/
+
+# Local files
+*.log
+.DS_Store
+
+# Python validation caches
+__pycache__/
+*.pyc
+

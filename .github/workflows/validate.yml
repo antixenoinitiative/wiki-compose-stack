@@ -1,0 +1,63 @@
+name: Validate stack
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Python and shell scripts
+        run: |
+          python3 -m compileall -q scripts tests
+          for script in scripts/backup.sh scripts/wiki-start.sh; do sh -n "$script"; done
+          bash -n scripts/restore-db.sh
+          python3 -m unittest discover -s tests -v
+      - name: Validate both Compose files with dummy values
+        env:
+          DB_ADMIN_PASSWORD: validation-only
+          DB_PASSWORD: validation-only
+          POSTGRES_VOLUME_NAME: validation-only
+          AXI_TOOLS_IMAGE: axi-tools:validation
+        run: |
+          docker compose -f compose.yaml config --quiet
+          docker compose -f compose.managed.yaml config --quiet
+      - name: Build and check helper image (no publication)
+        run: |
+          docker build -f docker/tools.Dockerfile -t axi-tools:validation .
+          docker run --rm --entrypoint python3 axi-tools:validation -m py_compile /app/branding.py
+          docker run --rm --entrypoint pg_dump axi-tools:validation --version
+      - name: Verify backup and restore against a disposable database
+        run: |
+          set -eu
+          trap 'docker rm -fv axi-ci-pg >/dev/null 2>&1 || true; docker volume rm axi-ci-backups >/dev/null 2>&1 || true; docker network rm axi-ci >/dev/null 2>&1 || true' EXIT
+          docker network create axi-ci
+          docker volume create axi-ci-backups
+          docker run -d --name axi-ci-pg --network axi-ci -e POSTGRES_PASSWORD=validation-only postgres:14.24
+          for attempt in $(seq 1 60); do
+            if docker exec axi-ci-pg pg_isready -h 127.0.0.1 -U postgres; then break; fi
+            sleep 2
+          done
+          docker exec axi-ci-pg psql -U postgres -v ON_ERROR_STOP=1 -c "CREATE ROLE wiki_db_user LOGIN PASSWORD 'validation-only';"
+          docker exec axi-ci-pg createdb -U postgres -O wiki_db_user wiki_db
+          docker exec axi-ci-pg psql -U postgres -d wiki_db -v ON_ERROR_STOP=1 -c "SET ROLE wiki_db_user; CREATE TABLE users(id integer); INSERT INTO users VALUES (1),(2); CREATE TABLE pages(id integer); INSERT INTO pages VALUES (1);"
+          docker run --rm --network axi-ci --entrypoint /bin/sh \
+            -e PGHOST=axi-ci-pg -e PGUSER=wiki_db_user -e PGPASSWORD=validation-only -e PGDATABASE=wiki_db -e BACKUP_ONCE=1 \
+            -v axi-ci-backups:/backups axi-tools:validation /app/backup.sh
+          # An unchanged second observation must reuse the same archive.
+          docker run --rm --network axi-ci --entrypoint /bin/sh \
+            -e PGHOST=axi-ci-pg -e PGUSER=wiki_db_user -e PGPASSWORD=validation-only -e PGDATABASE=wiki_db -e BACKUP_ONCE=1 \
+            -v axi-ci-backups:/backups axi-tools:validation /app/backup.sh
+          docker run --rm --entrypoint /bin/sh -v axi-ci-backups:/backups:ro axi-tools:validation -ec \
+            'set -- /backups/wiki_db-*.dump; test "$#" = 1'
+          docker exec axi-ci-pg createdb -U postgres -O wiki_db_user wiki_restore_ci
+          docker run --rm --network axi-ci --entrypoint /bin/sh \
+            -e PGHOST=axi-ci-pg -e PGUSER=postgres -e PGPASSWORD=validation-only \
+            -v axi-ci-backups:/backups:ro axi-tools:validation -ec \
+            'pg_restore --single-transaction --exit-on-error -d wiki_restore_ci /backups/wiki_db-*.dump'
+          test "$(docker exec axi-ci-pg psql -U postgres -d wiki_restore_ci -Atc 'SELECT count(*) FROM users')" = 2
+          test "$(docker exec axi-ci-pg psql -U postgres -d wiki_restore_ci -Atc 'SELECT count(*) FROM pages')" = 1
