@@ -8,3 +8,4 @@ Type=oneshot
 EnvironmentFile=/etc/axi-wiki/report.env
 ExecStart=/usr/bin/python3 /opt/axi-wiki/scripts/report-deployment.py
 UMask=0077
+TimeoutStartSec=5min
