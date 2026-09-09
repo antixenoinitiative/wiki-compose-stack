@@ -1,4 +1,4 @@
-# AXI Wiki infrastructure
+# AXI Wiki Stack
 
 [![Validate stack](https://github.com/antixenoinitiative/wiki-compose-stack/actions/workflows/validate.yml/badge.svg)](https://github.com/antixenoinitiative/wiki-compose-stack/actions/workflows/validate.yml)
 [![Publish tools image](https://github.com/antixenoinitiative/wiki-compose-stack/actions/workflows/publish-tools.yml/badge.svg)](https://github.com/antixenoinitiative/wiki-compose-stack/actions/workflows/publish-tools.yml)
@@ -52,14 +52,6 @@ Store real values privately in Portainer:
 | `POSTGRES_VOLUME_NAME` | Existing volume name: `axi-wiki_postgres_data` |
 
 `.env.example` contains placeholders only. Do not commit passwords, registry tokens, Discord secrets, SSH private keys or database dumps. Changing a Compose password variable does not itself rotate a password in an already-initialised PostgreSQL database.
-
-## Branding
-
-The branding container checks approved logo / favicon files in `branding/` on `main` every five minutes. It validates the expected image dimensions and activates a valid complete set together. Keep related icon changes in one commit and retain the expected filenames and dimensions.
-
-Wiki.js uses native favicon paths linked to the shared branding volume, mounted read-only in the wiki container.
-
-Cloudflare and browsers may continue serving cached icons at their existing URLs. A changed query string can show the new icon while the original URL remains cached. Wait for cache expiry or purge the affected icon URLs when an immediate refresh is needed. The existing Safari pinned-tab SVG is not replaced by this PNG/ICO setup.
 
 ## Database backups
 
