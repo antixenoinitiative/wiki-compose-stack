@@ -1,0 +1,36 @@
+name: Publish tools image
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check scripts before publication
+        run: |
+          python3 -m unittest discover -s tests -v
+          for script in scripts/backup.sh scripts/wiki-start.sh; do sh -n "$script"; done
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        id: build
+        with:
+          context: .
+          file: docker/tools.Dockerfile
+          push: true
+          tags: ghcr.io/antixenoinitiative/wiki-compose-tools:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/antixenoinitiative/wiki-compose-stack
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: Record exact image reference
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: echo "Set AXI_TOOLS_IMAGE to ghcr.io/antixenoinitiative/wiki-compose-tools@$DIGEST" >> "$GITHUB_STEP_SUMMARY"
