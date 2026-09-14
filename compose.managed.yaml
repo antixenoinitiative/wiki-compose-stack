@@ -8,7 +8,19 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:?Set DB_ADMIN_PASSWORD in Portainer}
       POSTGRES_DB: wiki_db
-      reporter:
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U postgres -d wiki_db
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: local
+
+  reporter:
     image: ghcr.io/antixenoinitiative/wiki-compose-tools:main
     pull_policy: always
     container_name: axi-wiki-reporter
@@ -53,17 +65,7 @@ services:
           create_host_path: false
     logging:
       driver: local
-    volumes:
-    - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test:
-      - CMD-SHELL
-      - pg_isready -U postgres -d wiki_db
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging:
-      driver: local
+
   wiki:
     image: requarks/wiki:2.5.314
     container_name: axi-wiki-app
