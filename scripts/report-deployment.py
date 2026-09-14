@@ -15,8 +15,8 @@ import urllib.request
 
 REPO = 'antixenoinitiative/wiki-compose-stack'
 TASK = 'deploy:axi-wiki-report'
-SERVICES = {'db', 'wiki', 'caddy', 'branding', 'backup'}
-NAMES = ['axi-wiki-db', 'axi-wiki-app', 'axi-wiki-caddy', 'axi-wiki-branding', 'axi-wiki-backup']
+SERVICES = {'db', 'wiki', 'branding', 'backup'}
+NAMES = ['axi-wiki-db', 'axi-wiki-app', 'axi-wiki-branding', 'axi-wiki-backup']
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, *args, **kwargs):
