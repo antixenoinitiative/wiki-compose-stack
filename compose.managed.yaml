@@ -1,4 +1,4 @@
-x-axi-tools-publication: "34869541720-1"
+x-axi-tools-publication: "34871138028-1"
 services:
   db:
     image: postgres:14.24
