@@ -40,6 +40,4 @@ A PostgreSQL major-version change needs a database migration; do not simply poin
 
 ## If an update fails
 
-Check the failed Actions step and Portainer/container logs. Fix or revert the relevant change through Git. Reverting the application image may not undo database migrations; keep the pre-upgrade backup.
-
-The old `compose.yaml` omits branding and backups. It is not the normal rollback target. Preserve all data volumes during recovery.
+Check the failed Actions step and Portainer/container logs. Fix or revert the relevant change through Git. Reverting the application image may not undo database migrations; keep pre-upgrade backups.
