@@ -15,7 +15,6 @@ Portainer deploys the `axi-wiki` stack from `refs/heads/main`, using **`compose.
 | --- | --- | --- | 
 | `db` | `axi-wiki-db` | PostgreSQL | 
 | `wiki` | `axi-wiki-app` | Wiki.js | 
-| `caddy` | `axi-wiki-caddy` | HTTPS reverse proxy, Caddy 2 | 
 | `branding` | `axi-wiki-branding` | Fetch and activate native favicon files |
 | `backup` | `axi-wiki-backup` | Database dumps and retention |
 
