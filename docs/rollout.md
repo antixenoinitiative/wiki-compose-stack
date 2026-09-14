@@ -17,6 +17,18 @@ Keep the stack name and all existing volumes. Do not delete the stack or run `do
 
 For a replacement server, restore the database and required roles before starting Wiki.js. Git content sync alone cannot restore users or all wiki settings.
 
+## External HTTPS proxy
+
+The wiki stack does not include a reverse proxy or publish ports 80/443. Public HTTPS is provided by the separate `axi-proxy` stack, whose configuration is managed privately in Portainer.
+
+The proxy connects to `axi-wiki-app:3000` through the existing `axi-wiki_default` Docker network. Preserve the `axi-wiki` stack name and this network. Routine stack updates should use Portainer's update/redeploy operation rather than deleting and recreating the stack or network.
+
+The proxy reuses the existing `axi-wiki_caddy_data` and `axi-wiki_caddy_config` volumes as external volumes. Their names reflect the previous deployment layout; they are now used by the separate proxy. Do not delete them when cleaning up the old wiki Caddy container.
+
+Recovery onto a replacement server must include the separately managed proxy configuration and its persistent storage, as well as the wiki application and database. This repository alone does not recreate public HTTPS access.
+
+After a deployment, check both the wiki-stack health and the public HTTPS site. The deployment reporter checks the local application response, not the external proxy.
+
 ## Upgrade Wiki.js or PostgreSQL
 
 1. Make a fresh database backup and keep a copy outside automatic retention. Test restoration.
