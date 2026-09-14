@@ -1,6 +1,8 @@
 # GitHub deployment status
 
-The optional reporter checks the deployed commit, five stack containers and the local wiki response every five minutes. It records successful deployments under **axi-wiki** on GitHub, with a link to the live site. It does not restart services or report ongoing outages.
+The optional reporter checks the deployed commit, four wiki-stack containers (`db`, `wiki`, `branding`, and `backup`) and the local Wiki.js HTTP response every five minutes. It records successful deployments under **axi-wiki** on GitHub, with a link to the live site. It does not restart services or report ongoing outages.
+
+HTTPS is provided by a separate proxy managed in Portainer. The reporter does not inspect that proxy or verify public HTTPS availability; a successful report confirms the wiki application deployment, not the complete public access path.
 
 This guide uses the updated reporter and `setup-deployment-reporting.py`. It reads Portainer's `CurrentDeploymentInfo`, rather than the legacy `GitConfig` fields. Upload those script updates before installing it.
 

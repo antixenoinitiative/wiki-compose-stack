@@ -1,36 +1,41 @@
 name: Validate stack
+
 on:
   pull_request:
   push:
     branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Check Python and shell scripts
         run: |
           python3 -m compileall -q scripts tests
           for script in scripts/backup.sh scripts/wiki-start.sh; do sh -n "$script"; done
           bash -n scripts/restore-db.sh
           python3 -m unittest discover -s tests -v
-      - name: Validate both Compose files with dummy values
+
+      - name: Validate production Compose file with dummy values
         env:
           DB_ADMIN_PASSWORD: validation-only
           DB_PASSWORD: validation-only
           POSTGRES_VOLUME_NAME: validation-only
-          AXI_TOOLS_IMAGE: axi-tools:validation
         run: |
-          docker compose -f compose.yaml config --quiet
           docker compose -f compose.managed.yaml config --quiet
+
       - name: Build and check helper image (no publication)
         run: |
           docker build -f docker/tools.Dockerfile -t axi-tools:validation .
           docker run --rm --entrypoint python3 axi-tools:validation -m py_compile /app/branding.py
           docker run --rm --entrypoint pg_dump axi-tools:validation --version
+
       - name: Verify backup and restore against a disposable database
         run: |
           set -eu
