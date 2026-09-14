@@ -47,27 +47,6 @@ services:
     command:
     - /bin/sh
     - /branding/wiki-start.sh
-  caddy:
-    image: caddy:2
-    container_name: axi-wiki-caddy
-    restart: unless-stopped
-    depends_on:
-    - wiki
-    command:
-    - caddy
-    - reverse-proxy
-    - --from
-    - wiki.antixenoinitiative.com
-    - --to
-    - http://wiki:3000
-    ports:
-    - 80:80
-    - 443:443
-    volumes:
-    - caddy_data:/data
-    - caddy_config:/config
-    logging:
-      driver: local
   branding:
     image: ghcr.io/antixenoinitiative/wiki-compose-tools:main
     pull_policy: always
@@ -133,7 +112,5 @@ volumes:
     external: true
     name: ${POSTGRES_VOLUME_NAME:?Set the existing PostgreSQL volume name}
   wiki_data: null
-  caddy_data: null
-  caddy_config: null
   branding_data: null
   backup_data: null
