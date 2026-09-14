@@ -8,6 +8,51 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:?Set DB_ADMIN_PASSWORD in Portainer}
       POSTGRES_DB: wiki_db
+      reporter:
+    image: ghcr.io/antixenoinitiative/wiki-compose-tools:main
+    pull_policy: always
+    container_name: axi-wiki-reporter
+    restart: unless-stopped
+    init: true
+    network_mode: host
+    environment:
+      PYTHONUNBUFFERED: '1'
+    entrypoint:
+      - /bin/sh
+      - -ec
+    command:
+      - |
+        set -a
+        . /etc/axi-wiki/report.env
+        set +a
+        while true; do
+          if timeout 240s python3 /app/report-deployment.py; then
+            :
+          else
+            echo "Reporter attempt failed; retrying in 300 seconds." >&2
+          fi
+          sleep 300
+        done
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /etc/axi-wiki
+        target: /etc/axi-wiki
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /var/lib/axi-wiki
+        target: /var/lib/axi-wiki
+        bind:
+          create_host_path: false
+    logging:
+      driver: local
     volumes:
     - postgres_data:/var/lib/postgresql/data
     healthcheck:
