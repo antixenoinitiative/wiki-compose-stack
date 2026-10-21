@@ -70,6 +70,7 @@ services:
     image: requarks/wiki:2.5.314
     container_name: axi-wiki-app
     restart: unless-stopped
+    init: true
     depends_on:
       db:
         condition: service_healthy
