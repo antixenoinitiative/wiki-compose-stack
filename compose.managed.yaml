@@ -67,7 +67,7 @@ services:
       driver: local
 
   wiki:
-    image: requarks/wiki:2.5.314
+    image: requarks/wiki:2.5.317
     container_name: axi-wiki-app
     restart: unless-stopped
     init: true
