@@ -1,14 +1,11 @@
-# Local environment files
 .env
 .env.*
 !.env.example
 
-# Credentials and keys
 secrets/
 *.key
 *.pem
 
-# Backups and runtime data
 backups/
 wiki-migration/
 *.dump
@@ -18,6 +15,8 @@ postgres-data/
 portainer-data/
 wiki-data/
 
-# Local files
 *.log
 .DS_Store
+
+__pycache__/
+*.pyc
