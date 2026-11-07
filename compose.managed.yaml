@@ -1,163 +1,61 @@
-x-axi-tools-publication: "41314344254-1"
 services:
   db:
-    image: postgres:14.24
-    container_name: axi-wiki-db
+    image: postgres:18
+    container_name: axi-wiki-preview-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:?Set DB_ADMIN_PASSWORD in Portainer}
-      POSTGRES_DB: wiki_db
+      POSTGRES_DB: wiki_preview
+      POSTGRES_USER: wiki_preview
+      POSTGRES_PASSWORD: ${PREVIEW_DB_PASSWORD:?Set the existing PREVIEW_DB_PASSWORD in Portainer}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - database:/var/lib/postgresql
+    networks: [database]
     healthcheck:
-      test:
-        - CMD-SHELL
-        - pg_isready -U postgres -d wiki_db
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 10s
       timeout: 5s
-      retries: 5
-    logging:
-      driver: local
-
-  reporter:
-    image: ghcr.io/antixenoinitiative/wiki-compose-tools:main
-    pull_policy: always
-    container_name: axi-wiki-reporter
-    restart: unless-stopped
-    init: true
-    network_mode: host
-    environment:
-      PYTHONUNBUFFERED: '1'
-    entrypoint:
-      - /bin/sh
-      - -ec
-    command:
-      - |
-        set -a
-        . /etc/axi-wiki/report.env
-        set +a
-        while true; do
-          if timeout 240s python3 /app/report-deployment.py; then
-            :
-          else
-            echo "Reporter attempt failed; retrying in 300 seconds." >&2
-          fi
-          sleep 300
-        done
-    volumes:
-      - type: bind
-        source: /var/run/docker.sock
-        target: /var/run/docker.sock
-        read_only: true
-        bind:
-          create_host_path: false
-      - type: bind
-        source: /etc/axi-wiki
-        target: /etc/axi-wiki
-        read_only: true
-        bind:
-          create_host_path: false
-      - type: bind
-        source: /var/lib/axi-wiki
-        target: /var/lib/axi-wiki
-        bind:
-          create_host_path: false
+      retries: 12
+      start_period: 30s
     logging:
       driver: local
 
   wiki:
-    image: requarks/wiki:2.5.317
-    container_name: axi-wiki-app
+    image: ghcr.io/requarks/wiki:3.0.1
+    container_name: axi-wiki-preview-app
     restart: unless-stopped
-    init: true
-    depends_on:
-      db:
-        condition: service_healthy
-      branding:
-        condition: service_healthy
     environment:
-      DB_TYPE: postgres
+      ADMIN_EMAIL: ${PREVIEW_ADMIN_EMAIL:?Set the existing PREVIEW_ADMIN_EMAIL}
+      ADMIN_PASS: ${PREVIEW_ADMIN_PASSWORD:?Set the existing PREVIEW_ADMIN_PASSWORD}
       DB_HOST: db
-      DB_PORT: '5432'
-      DB_USER: wiki_db_user
-      DB_PASS: ${DB_PASSWORD:?Set DB_PASSWORD in Portainer}
-      DB_NAME: wiki_db
-      DB_SSL: 'false'
-    ports:
-    - 127.0.0.1:3000:3000
+      DB_PORT: "5432"
+      DB_NAME: wiki_preview
+      DB_USER: wiki_preview
+      DB_PASS: ${PREVIEW_DB_PASSWORD:?Set the existing PREVIEW_DB_PASSWORD}
+      DB_SSL: "false"
     volumes:
-    - wiki_data:/wiki/data
-    - branding_data:/branding:ro
-    logging:
-      driver: local
-    command:
-    - /bin/sh
-    - /branding/wiki-start.sh
-  branding:
-    image: ghcr.io/antixenoinitiative/wiki-compose-tools:main
-    pull_policy: always
-    container_name: axi-wiki-branding
-    restart: unless-stopped
-    init: true
-    entrypoint:
-    - python3
-    - /app/branding.py
-    environment:
-      BRANDING_URL: https://raw.githubusercontent.com/antixenoinitiative/wiki-compose-stack/main/branding
-      BRANDING_INTERVAL_SECONDS: '300'
-    volumes:
-    - branding_data:/branding
-    healthcheck:
-      test:
-      - CMD
-      - python3
-      - /app/branding.py
-      - --check
-      interval: 10s
-      timeout: 5s
-      retries: 30
-      start_period: 30s
-    logging:
-      driver: local
-  backup:
-    image: ghcr.io/antixenoinitiative/wiki-compose-tools:main
-    pull_policy: always
-    container_name: axi-wiki-backup
-    restart: unless-stopped
-    init: true
-    entrypoint:
-    - /bin/sh
-    - /app/backup.sh
+      - content:/wiki/data/content
+      - repo:/wiki/data/repo
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      PGHOST: db
-      PGPORT: '5432'
-      PGDATABASE: wiki_db
-      PGUSER: wiki_db_user
-      PGPASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in Portainer}
-      BACKUP_INTERVAL_SECONDS: '86400'
-    volumes:
-    - backup_data:/backups
-    healthcheck:
-      test:
-      - CMD
-      - python3
-      - -c
-      - import os,time; assert time.time()-os.stat('/backups/.last-success').st_mtime
-        < 172800
-      interval: 5m
-      timeout: 5s
-      retries: 2
-      start_period: 10m
+    networks: [database, proxy]
     logging:
       driver: local
-volumes:
-  postgres_data:
+
+networks:
+  database:
+    internal: true
+  proxy:
     external: true
-    name: ${POSTGRES_VOLUME_NAME:?Set the existing PostgreSQL volume name}
-  wiki_data: null
-  branding_data: null
-  backup_data: null
+    name: axi-wiki_default
+
+volumes:
+  database:
+    external: true
+    name: axi-wiki-preview_preview_database
+  content:
+    external: true
+    name: 0a1db937e12ab2af56a83c8397bdd023d25f673dcfcca6cca146de75c6eacc51
+  repo:
+    external: true
+    name: e04f6aa260cc5609be8ab81a4a583a1bf056290a2f62c81d055a66e2aeaeb39a

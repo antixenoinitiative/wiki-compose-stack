@@ -1,8 +1,0 @@
-*
-!scripts/
-!scripts/branding.py
-!scripts/wiki-start.sh
-!scripts/backup.sh
-!docker/
-!docker/tools.Dockerfile
-!scripts/backup.py
