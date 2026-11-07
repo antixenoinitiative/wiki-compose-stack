@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:18
-    container_name: axi-wiki-preview-db
+    container_name: axi-wiki-db
     restart: unless-stopped
     environment:
       POSTGRES_DB: wiki_preview
@@ -21,7 +21,7 @@ services:
 
   wiki:
     image: ghcr.io/requarks/wiki:3.0.1
-    container_name: axi-wiki-preview-app
+    container_name: axi-wiki-app
     restart: unless-stopped
     environment:
       ADMIN_EMAIL: ${PREVIEW_ADMIN_EMAIL:?Set the existing PREVIEW_ADMIN_EMAIL}
