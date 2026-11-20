@@ -20,7 +20,7 @@ services:
       driver: local
 
   wiki:
-    image: ghcr.io/requarks/wiki:3.4.0
+    image: ghcr.io/requarks/wiki:3.5.0
     container_name: axi-wiki-app
     restart: unless-stopped
     environment:
