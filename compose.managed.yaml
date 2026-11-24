@@ -32,6 +32,7 @@ services:
       DB_USER: wiki_preview
       DB_PASS: ${PREVIEW_DB_PASSWORD:?Set the existing PREVIEW_DB_PASSWORD}
       DB_SSL: "false"
+      ICONIFY_API_URL: ${ICONIFY_API_URL:-https://api.iconify.design}
     volumes:
       - content:/wiki/data/content
       - repo:/wiki/data/repo
